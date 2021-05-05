@@ -3,22 +3,45 @@ from rest_framework.decorators import api_view
 from watchlist.models import movie
 from watchlist.api.serializers import movieSerializer
 
+from rest_framework import status
 
-@api_view()
+
+@api_view(['GET', 'POST'])
 def movie_list(request):
-	movie_list = movie.objects.all()
-	# print(list(movies.values))
+	if request.method == 'GET':
+		movie_list = movie.objects.all()
+		serializer = movieSerializer(movie_list, many=True)
+		return Response(serializer.data) 
+	if request.method == 'POST':
+		serializer = movieSerializer(data=request.data)
+		if serializer.is_valid():
+			serializer.save()
+			return Response(serializer.data)
+		else:
+			return Response(serializer.errors)
 
-	serializer = movieSerializer(movie_list, many=True)
-	# this "many" is the attribute that tells it that multiple
-	# objects are coming
 
-	return Response(serializer.data) 
-
-@api_view()
+@api_view(['GET', 'PUT', 'DELETE'])
 def movie_detail(request, pk):
-	# no code here yet
-	mov_obj = movie.objects.get(pk = pk)
-	serializer = movieSerializer(mov_obj)
-	return Response(serializer.data)
+	# no code here yet'
+	if request.method == 'GET':
+		mov_obj = movie.objects.get(pk = pk)
+		serializer = movieSerializer(mov_obj)
+		return Response(serializer.data)
+
+	if request.method == 'PUT':
+		mov_obj = movie.objects.get(pk = pk)
+
+		serializer = movieSerializer(mov_obj, data=request.data)
+		if serializer.is_valid():
+			serializer.save()
+			return Response(serializer.data)
+		else:
+			return Response(serializer.errors, status=status.HTTP_404_BAD_CONTENT)
+
+	if request.method == 'DELETE':
+		mov_obj = movie.objects.get(pk = pk)
+		mov_obj.delete()
+		return Response(status=status.HTTP_204_NO_CONTENT)
+
 
