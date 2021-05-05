@@ -1,5 +1,5 @@
 from django.urls import path, include
-from watchlist.views import movie_list, movie_detail
+from watchlist.api.views import movie_list, movie_detail
 
 urlpatterns = [
     path('list/', movie_list, name='movie_list'),
