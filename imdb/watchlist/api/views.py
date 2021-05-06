@@ -1,9 +1,47 @@
 from rest_framework.response  import Response
 from rest_framework.views import APIView 
-from watchlist.models import WatchList, StreamPlatform
-from watchlist.api.serializers import WatchListSerializer, StreamPlatformSerializer
+from watchlist.models import WatchList, StreamPlatform, Review
+from watchlist.api.serializers import WatchListSerializer, StreamPlatformSerializer, ReviewSerializer
  
 from rest_framework import status
+
+class ReviewAV(APIView):
+	def get(self, request):
+		reviews = Review.objects.all()
+		serializer = ReviewSerializer(reviews, many=True)
+		return Response(serializer.data)
+
+	def post(self, request):
+		serializer = ReviewSerializer(data = request.data)
+		if serializer.is_valid():
+			serializer.save()
+			return Response(serializer.data)
+		else:
+			return Response(serializer.errors)
+
+class ReviewDetailAV(APIView):
+	def get(self, request, pk):
+		try:
+			review = Review.objects.get(pk=pk)
+		except Review.DoesNotExist:
+			return Response({'Error' : 'Not Found'}, status = status.HTTP_404_NOT_FOUND)
+		serializer = ReviewSerializer(review)
+		return Response(serializer.data)
+
+	def put(self, request, pk):
+		review = Review.objects.get(pk=pk)
+		serializer =  ReviewSerializer(review, data=request.data)
+		if serializer.is_valid():
+			serializer.save()
+			return Response(serializer.data)
+		else:
+			return Response(serializer.errors, status=status.HTTP_404_BAD_CONTENT)
+
+	def delete(self, request, pk):
+		review = Review.objects.get(pk=pk)
+		review.delete()
+		return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 class StreamPlatformAV(APIView):
 	def get(self, request):
