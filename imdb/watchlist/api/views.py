@@ -1,7 +1,10 @@
 from rest_framework.response  import Response
 
+from django.shortcuts import get_object_or_404
+
 from rest_framework.views import APIView 
 from rest_framework import generics
+from rest_framework import viewsets
 from rest_framework import mixins
 
 from watchlist.models import WatchList, StreamPlatform, Review
@@ -10,13 +13,55 @@ from watchlist.api.serializers import WatchListSerializer, StreamPlatformSeriali
 from rest_framework import status
 
 
-class ReviewList(generics.ListCreateAPIView):
-	queryset = Review.objects.all()
+class ReviewCreate(generics.CreateAPIView):
+	# we need to overwrite the current function
 	serializer_class = ReviewSerializer
+
+	def perform_create(self, serializer):
+		pk = self.kwargs.get('pk')
+		movie = WatchList.objects.get(pk = pk)
+
+		serializer.save(watchlist=movie)
+
+class ReviewList(generics.ListCreateAPIView):
+	# queryset = Review.objects.all()
+	serializer_class = ReviewSerializer
+
+	# here, we overwrite queryset
+	def get_queryset(self):
+		pk = self.kwargs['pk']
+		return Review.objects.filter(watchlist=pk)
 
 class ReviewDetail(generics.RetrieveUpdateDestroyAPIView):
 	queryset = Review.objects.all()
 	serializer_class = ReviewSerializer
+
+
+class StreamPlatformViewSet(viewsets.ReadOnlyModelViewSet):
+	queryset = StreamPlatform.objects.all()
+	serializer_class = StreamPlatformSerializer
+
+
+# class StreamPlatformViewSet(viewsets.ViewSet):
+	
+# 	def list(self, request):
+# 		queryset = StreamPlatform.objects.all()
+# 		serializer = StreamPlatformSerializer(queryset, many=True)
+# 		return Response(serializer.data)
+
+# 	def retrieve(self, request, pk=None):
+# 		queryset = StreamPlatform.objects.all()
+# 		watchlist = get_object_or_404(queryset, pk=pk)
+# 		serializer = StreamPlatformSerializer(watchlist)
+# 		return Response(serializer.data)
+
+# 	def create(self, request):
+# 		serializer = StreamPlatformSerializer(data=request.data)
+# 		if serializer.is_valid():
+# 			serializer.save()
+# 			return Response(serializer.data)
+# 		else:
+# 			return Response(serializer.errors)
 
 
 class StreamPlatformAV(APIView):
