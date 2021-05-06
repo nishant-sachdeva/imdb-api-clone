@@ -25,7 +25,11 @@ def movie_list(request):
 def movie_detail(request, pk):
 	# no code here yet'
 	if request.method == 'GET':
-		mov_obj = movie.objects.get(pk = pk)
+		try:
+			mov_obj = movie.objects.get(pk = pk)
+		except movie.DoesNotExist:
+			return Response({'Error' : 'Movie not found'}, status=status.HTTP_404_NOT_FOUND)
+		
 		serializer = movieSerializer(mov_obj)
 		return Response(serializer.data)
 
