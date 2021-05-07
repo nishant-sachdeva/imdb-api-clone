@@ -12,6 +12,10 @@ from watchlist.api.serializers import WatchListSerializer, StreamPlatformSeriali
  
 from rest_framework import status
 
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+
+
+from watchlist.api.permissions import AdminOrReadOnly, ReviewUserorReadOnly
 
 class ReviewCreate(generics.CreateAPIView):
 	# we need to overwrite the current function
@@ -22,8 +26,8 @@ class ReviewCreate(generics.CreateAPIView):
 
 	def perform_create(self, serializer):
 		pk = self.kwargs.get('pk')
-		queryset = WatchList.objects.all()
-		watchlist = get_object_or_404(queryset, pk=pk)
+		watchlist = WatchList.objects.get(pk=pk)
+		# watchlist = get_object_or_404(queryset, pk=pk)
 
 		review_user = self.request.user 
 		review_queryset = Review.objects.filter(watchlist=watchlist, review_user=review_user)
@@ -31,11 +35,20 @@ class ReviewCreate(generics.CreateAPIView):
 		if review_queryset.exists():
 			raise ValidationError("Can't comment on same movie more than once!")
 
+		if watchlist.number_of_rating == 0:
+			watchlist.avg_rating = serializer.validated_data['rating']
+		else:
+			watchlist.avg_rating = (watchlist.avg_rating + serializer.validated_data['rating'])/2
+
+		watchlist.number_of_rating = watchlist.number_of_rating + 1
+		watchlist.save()
+
 		serializer.save(watchlist=watchlist, review_user=review_user)
 
 class ReviewList(generics.ListCreateAPIView):
 	# queryset = Review.objects.all()
 	serializer_class = ReviewSerializer
+	permission_classes = [IsAuthenticatedOrReadOnly]
 
 	# here, we overwrite queryset
 	def get_queryset(self):
@@ -43,6 +56,8 @@ class ReviewList(generics.ListCreateAPIView):
 		return Review.objects.filter(watchlist=pk)
 
 class ReviewDetail(generics.RetrieveUpdateDestroyAPIView):
+	permission_classes = [ReviewUserorReadOnly]
+
 	queryset = Review.objects.all()
 	serializer_class = ReviewSerializer
 
