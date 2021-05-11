@@ -4,6 +4,7 @@ from user_app.api.serializers import RegistrationSerializer
 from rest_framework.authtoken.models import Token
 from rest_framework import status
 from user_app import models
+
 @api_view(['POST',])
 def logout_view(request):
 	if request.method == 'POST':
