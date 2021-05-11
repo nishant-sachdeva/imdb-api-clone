@@ -15,9 +15,11 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 
 
-from watchlist.api.permissions import AdminOrReadOnly, ReviewUserorReadOnly
+from watchlist.api.permissions import IsAdminOrReadOnly, IsReviewUserorReadOnly
 
 class ReviewCreate(generics.CreateAPIView):
+	permission_classes = [IsAuthenticated]
+
 	# we need to overwrite the current function
 	serializer_class = ReviewSerializer
 
@@ -48,7 +50,9 @@ class ReviewCreate(generics.CreateAPIView):
 class ReviewList(generics.ListCreateAPIView):
 	# queryset = Review.objects.all()
 	serializer_class = ReviewSerializer
-	permission_classes = [IsAuthenticated]
+	# permission_classes = [IsAuthenticated]
+	# no need for permissions here,since we anyone can see list
+
 
 	# here, we overwrite queryset
 	def get_queryset(self):
@@ -56,13 +60,15 @@ class ReviewList(generics.ListCreateAPIView):
 		return Review.objects.filter(watchlist=pk)
 
 class ReviewDetail(generics.RetrieveUpdateDestroyAPIView):
-	permission_classes = [ReviewUserorReadOnly]
+	permission_classes = [IsReviewUserorReadOnly]
 
 	queryset = Review.objects.all()
 	serializer_class = ReviewSerializer
 
 
 class StreamPlatformViewSet(viewsets.ModelViewSet):
+	permission_classes = [IsAdminOrReadOnly]
+
 	queryset = StreamPlatform.objects.all()
 	serializer_class = StreamPlatformSerializer
 
@@ -90,6 +96,8 @@ class StreamPlatformViewSet(viewsets.ModelViewSet):
 
 
 class StreamPlatformAV(APIView):
+	permission_classes = [IsAdminOrReadOnly]
+
 	def get(self, request):
 		platforms = StreamPlatform.objects.all()
 		serializer = StreamPlatformSerializer(platforms, many=True)
@@ -105,6 +113,8 @@ class StreamPlatformAV(APIView):
 
 
 class StreamPlatformDetailAV(APIView):
+	permission_classes = [IsAdminOrReadOnly]
+
 	def get(self, request, pk):
 		try:
 			platform = StreamPlatform.objects.get(pk=pk)
@@ -129,6 +139,7 @@ class StreamPlatformDetailAV(APIView):
 
 
 class WatchListAV(APIView):
+	permission_classes = [IsAdminOrReadOnly]
 	def get(self,request):
 		movies = WatchList.objects.all()
 		serializer = WatchListSerializer(movies, many=True)
@@ -145,6 +156,7 @@ class WatchListAV(APIView):
 
 
 class WatchListDetailAV(APIView):
+	permission_classes = [IsAdminOrReadOnly]
 	def get(self, request, pk):
 		try:
 			mov_obj = WatchList.objects.get(pk = pk)
