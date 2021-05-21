@@ -18,7 +18,16 @@ from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnl
 from watchlist.api.permissions import IsAdminOrReadOnly, IsReviewUserorReadOnly
 
 from watchlist.api.throttling import ReviewCreateThrottle, ReviewListThrottle
-from rest_framework.throttling import UserRateThrottle, AnonCreateThrottle
+from rest_framework.throttling import UserRateThrottle, AnonCreateThrottle, ScopeRateThrottle
+
+
+class UserReview(generics.ListAPIView):
+	serializer_class = ReviewSerializer
+	# throttle_classes = [ReviewListThrottle, AnonRateThrottle]
+
+	def get_queryset(self):
+		pk = self.kwargs['username']
+		return Review.objects.filter(review_user=pk)
 
 
 
@@ -127,7 +136,7 @@ class StreamPlatformDetailAV(APIView):
 		try:
 			platform = StreamPlatform.objects.get(pk=pk)
 		except StreamPlatform.DoesNotExist:
-			return Response({'Error' : 'Not Found'}, status = status.HTTP_404_NOT_FOUND)
+			return Response({'Detail' : 'Not Found'}, status = status.HTTP_404_NOT_FOUND)
 		serializer = StreamPlatformSerializer(platform)
 		return Response(serializer.data)
 
@@ -169,7 +178,7 @@ class WatchListDetailAV(APIView):
 		try:
 			mov_obj = WatchList.objects.get(pk = pk)
 		except WatchList.DoesNotExist:
-			return Response({'Error' : 'Not found'}, status = status.HTTP_404_NOT_FOUND)
+			return Response({'Detail' : 'Not found'}, status = status.HTTP_404_NOT_FOUND)
 
 		serializer = WatchListSerializer(mov_obj)
 		return Response(serializer.data)
