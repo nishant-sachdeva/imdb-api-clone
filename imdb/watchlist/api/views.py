@@ -14,20 +14,23 @@ from rest_framework import status
 
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 
+from django_filters.rest_framework import DjangoFilterBackend
 
 from watchlist.api.permissions import IsAdminOrReadOnly, IsReviewUserorReadOnly
+from rest_framework import filters
 
+from watchlist.api.pagination import WatchListPagination, WatchLimitLOPagination, WatchLimitCPagination
 from watchlist.api.throttling import ReviewCreateThrottle, ReviewListThrottle
-from rest_framework.throttling import UserRateThrottle, AnonCreateThrottle, ScopeRateThrottle
-
+from rest_framework.throttling import UserRateThrottle, AnonRateThrottle
+# , ScopeRateThrottle
 
 class UserReview(generics.ListAPIView):
 	serializer_class = ReviewSerializer
 	# throttle_classes = [ReviewListThrottle, AnonRateThrottle]
-
 	def get_queryset(self):
-		pk = self.kwargs['username']
-		return Review.objects.filter(review_user=pk)
+		username = self.request.query_params.get('username', None)
+		
+		return Review.objects.filter(review_user__username=username)
 
 
 
@@ -62,11 +65,15 @@ class ReviewCreate(generics.CreateAPIView):
 		serializer.save(watchlist=watchlist, review_user=review_user)
 
 class ReviewList(generics.ListCreateAPIView):
-	throttle_classes = [UserRateThrottle, AnonRateThrottle]
+	# throttle_classes = [UserRateThrottle, AnonRateThrottle]
+	
 	# queryset = Review.objects.all()
 	serializer_class = ReviewSerializer
 	# permission_classes = [IsAuthenticated]
 	# no need for permissions here,since we anyone can see list
+	filter_backends = [DjangoFilterBackend]
+	filterset_fields = ['review_user__username', 'active']
+
 
 
 	# here, we overwrite queryset
@@ -75,7 +82,7 @@ class ReviewList(generics.ListCreateAPIView):
 		return Review.objects.filter(watchlist=pk)
 
 class ReviewDetail(generics.RetrieveUpdateDestroyAPIView):
-	throttle_classes = [UserRateThrottle, AnonRateThrottle]
+	# throttle_classes = [UserRateThrottle, AnonRateThrottle]
 
 	permission_classes = [IsReviewUserorReadOnly]
 
@@ -88,28 +95,6 @@ class StreamPlatformViewSet(viewsets.ModelViewSet):
 
 	queryset = StreamPlatform.objects.all()
 	serializer_class = StreamPlatformSerializer
-
-
-# class StreamPlatformViewSet(viewsets.ViewSet):
-	
-# 	def list(self, request):
-# 		queryset = StreamPlatform.objects.all()
-# 		serializer = StreamPlatformSerializer(queryset, many=True)
-# 		return Response(serializer.data)
-
-# 	def retrieve(self, request, pk=None):
-# 		queryset = StreamPlatform.objects.all()
-# 		watchlist = get_object_or_404(queryset, pk=pk)
-# 		serializer = StreamPlatformSerializer(watchlist)
-# 		return Response(serializer.data)
-
-# 	def create(self, request):
-# 		serializer = StreamPlatformSerializer(data=request.data)
-# 		if serializer.is_valid():
-# 			serializer.save()
-# 			return Response(serializer.data)
-# 		else:
-# 			return Response(serializer.errors)
 
 
 class StreamPlatformAV(APIView):
@@ -154,8 +139,19 @@ class StreamPlatformDetailAV(APIView):
 		platform.delete()
 		return Response(status=status.HTTP_204_NO_CONTENT)
 
+class WatchListGV(generics.ListAPIView):
+	queryset = WatchList.objects.all()
+	print("Queryset is as follows")
+	print(queryset)
+	serializer_class = WatchListSerializer
+	pagination_class = WatchLimitCPagination
+
+	# filter_backends = [filters.OrderingFilter]
+	# ordering_fields = ['avg_rating_descending']
+
 
 class WatchListAV(APIView):
+
 	permission_classes = [IsAdminOrReadOnly]
 	def get(self,request):
 		movies = WatchList.objects.all()

@@ -195,3 +195,4 @@ zict==2.0.0
 zipp==3.4.1
 zope.event==4.5.0
 zope.interface==5.2.0
+django-filter

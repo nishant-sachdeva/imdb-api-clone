@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'watchlist',
     'rest_framework',
     'rest_framework.authtoken',
+    'django_filters',
 ]
 
 MIDDLEWARE = [
@@ -148,5 +149,12 @@ REST_FRAMEWORK = {
         'user': '10/day',
         'review-create' : '10/day',
         'review-list' : '15/day',
-    }
+    },
+
+    'DEFAULT_RENDERER_CLASSES' : [
+        'rest_framework.renderers.JSONRenderer',
+    ],
+
+    # 'DEFAULT_PAGINATION_CLASS' : 'rest_framework.pagination.LimitOffsetPagination',
+    # 'PAGE_SIZE' : 100
 }
