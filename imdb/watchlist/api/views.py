@@ -144,10 +144,10 @@ class WatchListGV(generics.ListAPIView):
 	print("Queryset is as follows")
 	print(queryset)
 	serializer_class = WatchListSerializer
-	pagination_class = WatchLimitCPagination
+	pagination_class = WatchListPagination
 
-	# filter_backends = [filters.OrderingFilter]
-	# ordering_fields = ['avg_rating_descending']
+	filter_backends = [filters.OrderingFilter]
+	ordering_fields = ['avg_rating_descending']
 
 
 class WatchListAV(APIView):
